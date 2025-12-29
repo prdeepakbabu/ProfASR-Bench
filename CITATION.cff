@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this dataset, please cite it as below."
+title: "ProfASR-Bench: A Professional-Talk ASR Dataset for High-Stakes Applications Exposing the Context-Utilization Gap"
+authors:
+  - family-names: "Piskala"
+    given-names: "Deepak Babu"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+type: dataset
+repository-code: "https://github.com/prdeepakbabu/ProfASR-Bench"
+url: "https://huggingface.co/datasets/prdeepakbabu/ProfASR-Bench"
+license: Apache-2.0
+date-released: 2025-01-01
+keywords:
+  - automatic-speech-recognition
+  - asr-benchmark
+  - professional-speech
+  - domain-adaptation
+  - context-aware-asr
+  - whisper
+  - speech-recognition
+  - synthetic-speech
+abstract: >-
+  ProfASR-Bench is a professional-talk evaluation suite for context-conditioned 
+  ASR in high-stakes applications. It exposes the Context-Utilization Gap (CUG) - 
+  the phenomenon where modern ASR systems are nominally promptable yet underuse 
+  readily available side information. The dataset comprises 3,200 entity-rich 
+  utterances across Finance, Medicine, Legal, and Technology domains with 
+  4 voice profiles for slice-wise analysis.
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Piskala"
+      given-names: "Deepak Babu"
+  title: "ProfASR-Bench: A Professional-Talk ASR Dataset for High-Stakes Applications Exposing the Context-Utilization Gap"
+  year: 2025
+  journal: "arXiv preprint"
