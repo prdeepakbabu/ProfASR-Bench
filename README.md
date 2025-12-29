@@ -20,13 +20,26 @@ ProfASR-Bench is a professional-talk evaluation suite for **context-conditioned 
 
 ## 📊 Key Finding: The Context-Utilization Gap
 
-| Model | NO-PROMPT WER | +PROFILE | +DOMAIN | ORACLE | Gap |
-|-------|---------------|----------|---------|--------|-----|
-| Whisper-large-v3 | 5.2% | 5.1% | 4.9% | 3.8% | 1.4% |
-| Whisper-turbo | 6.8% | 6.7% | 6.5% | 4.2% | 2.6% |
-| Assembly AI | 4.1% | 4.0% | 3.9% | 3.2% | 0.9% |
+### Overall WER by Model (No Context)
 
-*Modern systems show minimal improvement with context—far below the ORACLE ceiling.*
+| Model | Overall | Financial | Legal | Medical | Technical |
+|-------|---------|-----------|-------|---------|-----------|
+| **Whisper Small** | **10.0%** | 13.3% | 8.5% | 15.8% | **2.3%** |
+| Whisper Base | 12.1% | 14.6% | 11.1% | 17.9% | 4.7% |
+| Whisper Tiny | 14.3% | 15.8% | 13.8% | 21.4% | 6.3% |
+| Qwen 2.5 Omni 3B | 24.3% | 15.2% | 35.7% | 38.9% | 7.3% |
+
+### Context Ladder Results (Whisper Small)
+
+| Condition | WER | SER | ΔWER vs No-prompt |
+|-----------|-----|-----|-------------------|
+| No-prompt | 9.98% | 52.56% | — |
+| Profile | 9.95% | 52.44% | −0.03 pp |
+| Domain+Profile | 9.95% | 52.38% | −0.03 pp |
+| **Oracle** | **9.92%** | 52.44% | −0.06 pp |
+| Adversarial | 9.95% | 52.50% | −0.03 pp |
+
+*Lightweight textual context yields little to no change in average WER—even at an ORACLE ceiling—exposing the Context-Utilization Gap (CUG).*
 
 ## 🚀 Quick Start
 
