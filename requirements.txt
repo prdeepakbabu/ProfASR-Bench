@@ -1,0 +1,27 @@
+# Core dependencies
+datasets>=2.14.0
+transformers>=4.30.0
+torch>=2.0.0
+torchaudio>=2.0.0
+
+# Audio processing
+soundfile>=0.12.0
+librosa>=0.10.0
+
+# Evaluation metrics
+jiwer>=3.0.0
+editdistance>=0.6.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# TTS generation (optional - for dataset creation)
+kokoro>=0.1.0
+
+# LLM text generation (optional - for dataset creation)
+boto3>=1.28.0  # AWS Bedrock Claude
+
+# Utilities
+tqdm>=4.65.0
+pyyaml>=6.0
