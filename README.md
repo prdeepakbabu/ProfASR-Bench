@@ -4,7 +4,7 @@
 
 [![Dataset on HuggingFace](https://img.shields.io/badge/🤗%20Dataset-ProfASR--Bench-blue)](https://huggingface.co/datasets/prdeepakbabu/ProfASR-Bench)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
-[![Paper](https://img.shields.io/badge/arXiv-XXXX.XXXXX-b31b1b.svg)](https://arxiv.org/abs/XXXX.XXXXX)
+[![Paper](https://img.shields.io/badge/arXiv-2512.23686-b31b1b.svg)](https://arxiv.org/abs/2512.23686)
 
 ## 🎯 Overview
 
@@ -130,9 +130,9 @@ pip install -r requirements.txt
 @article{piskala2025profasrbench,
   title={ProfASR-Bench: A Professional-Talk ASR Dataset for High-Stakes Applications Exposing the Context-Utilization Gap},
   author={Piskala, Deepak Babu},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  journal={arXiv preprint arXiv:2512.23686},
   year={2025},
-  url={https://arxiv.org/abs/XXXX.XXXXX}
+  url={https://arxiv.org/abs/2512.23686}
 }
 ```
 
@@ -143,5 +143,5 @@ Apache 2.0 License. The synthetic audio was generated using [Kokoro 82M TTS](htt
 ## 🔗 Links
 
 - **Dataset**: [HuggingFace Hub](https://huggingface.co/datasets/prdeepakbabu/ProfASR-Bench)
-- **Paper**: [arXiv](https://arxiv.org/abs/XXXX.XXXXX)
+- **Paper**: [arXiv](https://arxiv.org/abs/2512.23686)
 - **Author**: [Deepak Babu Piskala](https://prdeepakbabu.github.io/)
