@@ -26,6 +26,8 @@ class ModelConfig:
     attn_implementation: Optional[str]
     local_path: Optional[str] = None  # Path to local model directory
     prefer_local: bool = True         # Try local first, then remote
+    revision: Optional[str] = None    # Optional pinned HF Hub commit SHA
+    architecture: str = "whisper"     # "whisper" or "qwen3_asr"
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for logging."""
@@ -146,6 +148,22 @@ MODEL_CONFIGS = {
         load_in_8bit=False,
         load_in_4bit=False,
         attn_implementation=None
+    ),
+
+    # Oruk Fourier 2B (native Transformers Qwen3-ASR, CC BY-NC 4.0 non-commercial weights)
+    "oruk-fourier-2b": ModelConfig(
+        name="oruk-fourier-2b",
+        model_id="oruk/oruk-fourier-2b",
+        device=OPTIMAL_DEVICE,
+        torch_dtype=torch.bfloat16 if OPTIMAL_DEVICE in {"cuda", "mps"} else torch.float32,
+        use_flash_attention=False,
+        trust_remote_code=False,
+        low_cpu_mem_usage=True,
+        load_in_8bit=False,
+        load_in_4bit=False,
+        attn_implementation=None,
+        revision="8c2a8871f1304aa2f634da4fb95e24438c4945b9",
+        architecture="qwen3_asr"
     )
 }
 
@@ -170,6 +188,7 @@ MODEL_MEMORY_ESTIMATES = {
     "whisper-medium": 8.0,    # GB
     "distil-whisper-small": 3.0,   # GB
     "distil-whisper-medium": 6.0,  # GB
+    "oruk-fourier-2b": 5.5,        # GB (BF16 weights ~4.1 GB + activation headroom)
 }
 
 def check_memory_requirements(model_name: str, batch_size: int = 32) -> Dict[str, Any]:

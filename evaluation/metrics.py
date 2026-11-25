@@ -88,7 +88,7 @@ class WERCalculator:
                 deletions=alignment.deletions,
                 insertions=alignment.insertions,
                 total_errors=alignment.substitutions + alignment.deletions + alignment.insertions,
-                reference_length=alignment.reference_length,
+                reference_length=getattr(alignment, "reference_length", len(ref_normalized.split())),
                 wer=wer_score,
                 alignment=list(zip(
                     ref_normalized.split(),
