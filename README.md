@@ -41,6 +41,26 @@ ProfASR-Bench is a professional-talk evaluation suite for **context-conditioned 
 
 *Lightweight textual context yields little to no change in average WER—even at an ORACLE ceiling—exposing the Context-Utilization Gap (CUG).*
 
+### Additional Evaluation: Oruk Fourier 2B (`oruk/oruk-fourier-2b`)
+
+Evaluated on `prdeepakbabu/ProfASR-Bench@ebb55ae0` (3,200 utterances, 8.59 h; NVIDIA H200 BF16, `transformers==5.24.0`, pinned `oruk/oruk-fourier-2b@8c2a8871`, CC BY-NC 4.0 weights). Note: 160/3,200 dataset rows (`68` financial, `24` legal, `68` medical, `0` technical) contain punctuation-only `truth` (`".`), which normalize to empty strings; both corpus micro-WER over the 3,040 non-empty utterances (59,184 words) and Whisper `EnglishTextNormalizer` corpus WER (60,724 words) are reported alongside the raw all-3,200 `WERCalculator` mean.
+
+| Decoding Mode | ProfASR Corpus WER (3,040 valid) | Financial | Legal | Medical | Technical | Whisper-Norm Corpus WER | Raw All-3,200 Mean WER | Throughput |
+|---|---|---|---|---|---|---|---|---|
+| **3-beam (`published`, default)** | **6.94%** | **8.62%** | **3.46%** | **6.23%** | **9.55%** | **5.07%** | 12.17% | 302× RTFx |
+| Greedy (`num_beams=1`) | 7.38% | 8.77% | 3.99% | 6.56% | 10.27% | 5.51% | 12.60% | 666× RTFx |
+
+| Context Ladder Condition (`oruk/oruk-fourier-2b`, 3-beam) | ProfASR Corpus WER | Δ vs No-prompt | Whisper-Norm WER | Δ vs No-prompt | Valid SER |
+|---|---|---|---|---|---|
+| No-prompt | 6.94% | — | 5.07% | — | 56.28% |
+| **Profile** | **6.84%** | −0.10 pp | **5.01%** | −0.06 pp | 55.89% |
+| Domain+Profile | 7.03% | +0.09 pp | 5.11% | +0.04 pp | 57.40% |
+| Dataset Prompt | 6.82% | −0.12 pp | 5.08% | +0.01 pp | 55.53% |
+| Oracle | 14.49% | +7.55 pp | 12.15% | +7.08 pp | 88.39% |
+| Adversarial | 7.66% | +0.72 pp | 5.76% | +0.69 pp | 60.56% |
+
+*Even on a 2B Qwen3-ASR model with native prompt conditioning, speaker/domain cues yield ≤0.12 pp WER gain while mismatched (`Adversarial`) or full-transcript (`Oracle`) prompts degrade accuracy—reinforcing the Context-Utilization Gap.*
+
 ## 🚀 Quick Start
 
 ### Load Dataset

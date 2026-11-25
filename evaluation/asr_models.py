@@ -16,9 +16,14 @@ import logging
 from pathlib import Path
 import time
 
-from config.model_configs import ModelConfig
-from config.decoding_configs import DecodingConfig
-from config.prompt_configs import PromptConfig, generate_prompt_text
+try:
+    from configs.model_configs import ModelConfig
+    from configs.decoding_configs import DecodingConfig
+    from configs.prompt_configs import PromptConfig, generate_prompt_text
+except ImportError:
+    from config.model_configs import ModelConfig
+    from config.decoding_configs import DecodingConfig
+    from config.prompt_configs import PromptConfig, generate_prompt_text
 
 logger = logging.getLogger(__name__)
 
@@ -831,3 +836,130 @@ class ASRModelWrapper:
         }
         
         return benchmark_results
+
+
+class Qwen3ASRModelWrapper:
+    """Wrapper for native Transformers Qwen3-ASR models (e.g. ``oruk/oruk-fourier-2b``).
+
+    Supports prompt-conditioned Context Ladder evaluation via
+    ``processor.apply_transcription_request(..., prompt=...)`` and requires
+    ``transformers>=5.24.0``. Downloads directly from the canonical Hugging Face
+    repo with pinned revision for reproducible runs.
+    """
+
+    def __init__(
+        self,
+        model_config: ModelConfig,
+        decode_mode: str = "published",
+        language: str = "English",
+    ):
+        if decode_mode not in {"published", "greedy"}:
+            raise ValueError(f"Unsupported decode_mode={decode_mode!r}; use 'published' or 'greedy'")
+        self.model_config = model_config
+        self.decode_mode = decode_mode
+        self.language = language
+        self.device = model_config.device
+        self.model = None
+        self.processor = None
+        self.inference_times: List[float] = []
+
+    def _generation_kwargs(self, max_new_tokens: Optional[int] = None) -> Dict[str, Any]:
+        kwargs: Dict[str, Any] = {}
+        if self.decode_mode == "greedy":
+            kwargs["do_sample"] = False
+            kwargs["num_beams"] = 1
+        if max_new_tokens is not None:
+            kwargs["max_new_tokens"] = int(max_new_tokens)
+        return kwargs
+
+    def load_model(self) -> None:
+        """Load native Qwen3-ASR processor and BF16 model weights."""
+        try:
+            from transformers import AutoModelForMultimodalLM
+        except ImportError as exc:
+            raise ImportError(
+                "Qwen3ASRModelWrapper requires transformers>=5.24.0 "
+                "(`pip install 'transformers>=5.24.0'`)."
+            ) from exc
+
+        hub_kwargs: Dict[str, Any] = {}
+        if self.model_config.revision:
+            hub_kwargs["revision"] = self.model_config.revision
+
+        self.processor = AutoProcessor.from_pretrained(self.model_config.model_id, **hub_kwargs)
+        self.processor.tokenizer.padding_side = "left"
+        self.model = (
+            AutoModelForMultimodalLM.from_pretrained(
+                self.model_config.model_id,
+                dtype=self.model_config.torch_dtype,
+                low_cpu_mem_usage=self.model_config.low_cpu_mem_usage,
+                **hub_kwargs,
+            )
+            .to(self.device)
+            .eval()
+        )
+
+    def transcribe_batch(
+        self,
+        audio_arrays: List[np.ndarray],
+        prompts: Optional[List[Optional[str]]] = None,
+        max_new_tokens: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Transcribe a batch of 16 kHz mono float32 arrays with optional per-sample prompts."""
+        if self.model is None or self.processor is None:
+            self.load_model()
+
+        start_time = time.time()
+        clean_arrays = [
+            np.asarray(a, dtype=np.float32).squeeze() for a in audio_arrays
+        ]
+        req_kwargs: Dict[str, Any] = {
+            "audio": clean_arrays,
+            "language": [self.language] * len(clean_arrays),
+            "return_tensors": "pt",
+            "processor_kwargs": {"padding": True},
+        }
+        if prompts is not None and any(p for p in prompts):
+            req_kwargs["prompt"] = [p or "" for p in prompts]
+
+        inputs = self.processor.apply_transcription_request(**req_kwargs).to(
+            self.model.device, self.model.dtype
+        )
+        gen_kwargs = self._generation_kwargs(max_new_tokens=max_new_tokens)
+        with torch.inference_mode():
+            output_ids = self.model.generate(**inputs, **gen_kwargs)
+        gen_ids = output_ids[:, inputs["input_ids"].shape[1] :]
+        decoded = self.processor.decode(gen_ids, return_format="transcription_only")
+        if isinstance(decoded, str):
+            decoded = [decoded]
+        predictions = [str(t).strip() for t in decoded]
+
+        elapsed = time.time() - start_time
+        self.inference_times.append(elapsed)
+        return {
+            "predictions": predictions,
+            "all_hypotheses": [[{"text": p, "rank": 0, "score": 0.0, "unique": True}] for p in predictions],
+            "scores": [0.0 for _ in predictions],
+            "inference_time": elapsed,
+            "avg_time_per_sample": elapsed / max(len(clean_arrays), 1),
+        }
+
+    def transcribe_batch_with_prompts(
+        self,
+        audio_arrays: List[np.ndarray],
+        sample_metadata_list: List[Dict[str, Any]],
+        prompt_config: PromptConfig,
+        decoding_config: Optional[DecodingConfig] = None,
+        return_timestamps: bool = False,
+        template_style: str = "default",
+    ) -> Dict[str, Any]:
+        """Context-Ladder compatible batched transcription using PromptConfig."""
+        prompt_texts = [
+            generate_prompt_text(meta, prompt_config, template_style) if prompt_config.enabled else None
+            for meta in sample_metadata_list
+        ]
+        res = self.transcribe_batch(audio_arrays, prompts=prompt_texts)
+        res["prompt_texts"] = prompt_texts
+        res["prompt_strategy"] = prompt_config.strategy.value
+        res["prompt_enabled"] = prompt_config.enabled
+        return res
